@@ -18,7 +18,7 @@ if (empty($_SESSION['csrf_token'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="这是一个用于验证身份的页面，确保用户的身份安全。">
     <meta name="keywords" content="深度,网评,专题,环球,传播,论坛,图片,军事,焦点,排行,环保,校园,法治,奇闻,真情">
-    <title>神奇入口</title>
+    <title>888dh.cc</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -47,5 +47,15 @@ if (empty($_SESSION['csrf_token'])) {
     </div>
 
     <script src="js/main.js"></script>
+
+    <!-- 页脚 -->
+    <footer class="login-footer">
+        <div class="footer-copyright">
+            <p>© 2023-2024 888导航 - 精选优质网络资源的专业导航平台</p>
+            <p><a href="#">网站地图</a> | <a href="#">关于我们</a> | 联系方式：contact@888dh.cc</p>
+            <p>本站资源均来自互联网，如有侵权请联系删除</p>
+            <p>888dh.cc 保留所有权利</p>
+        </div>
+    </footer>
 </body>
 </html>

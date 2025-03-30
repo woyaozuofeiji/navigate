@@ -239,4 +239,31 @@ h1 {
 
 .shake {
     animation: shake 0.5s ease-in-out;
+}
+
+.login-footer {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+}
+
+.footer-copyright {
+    font-size: 12px;
+    color: #777;
+    line-height: 1.5;
+}
+
+.footer-copyright p {
+    margin: 2px 0;
+}
+
+.footer-copyright a {
+    color: #5371ff;
+    text-decoration: none;
+}
+
+.footer-copyright a:hover {
+    text-decoration: underline;
 } 

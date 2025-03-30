@@ -498,14 +498,5 @@ $navLinks = [
             ['name' => '酷18', 'url' => 'https://cool18.com'],
             ['name' => '南+ South Plus', 'url' => 'https://south-plus.org']
         ]
-    ],
-    [
-        'name' => '学习资源',
-        'links' => [
-            ['name' => 'Coursera', 'url' => 'https://www.coursera.org'],
-            ['name' => 'Udemy', 'url' => 'https://www.udemy.com'],
-            ['name' => 'edX', 'url' => 'https://www.edx.org'],
-            ['name' => 'Khan Academy', 'url' => 'https://www.khanacademy.org']
-        ]
     ]
 ];

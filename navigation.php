@@ -123,6 +123,12 @@ $encryptedData = $encryption->encrypt(json_encode($encryptedNavLinks));
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 <span>安全通道已建立 · 数据已加密</span>
             </div>
+            <div class="footer-copyright">
+                <p>© 2023-2024 888导航 - 精选优质网络资源的专业导航平台</p>
+                <p><a href="#">网站地图</a> | <a href="#">关于我们</a> | 联系方式：contact@888dh.cc</p>
+                <p>本站资源均来自互联网，如有侵权请联系删除</p>
+                <p>888dh.cc 保留所有权利</p>
+            </div>
         </footer>
     </div>
     

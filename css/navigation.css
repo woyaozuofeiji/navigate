@@ -403,6 +403,28 @@ a[class*="view-more"],
     color: var(--success-color);
 }
 
+.footer-copyright {
+    margin-top: 15px;
+    font-size: var(--font-size-xs);
+    color: var(--text-color-light);
+    text-align: center;
+    line-height: 1.5;
+}
+
+.footer-copyright p {
+    margin: 2px 0;
+}
+
+.footer-copyright a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.footer-copyright a:hover {
+    opacity: 0.8;
+}
+
 /* 加载动画 */
 .loading-container {
     position: fixed;
