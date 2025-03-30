@@ -53,14 +53,6 @@ $encryptedData = $encryption->encrypt(json_encode($encryptedNavLinks));
     <link rel="stylesheet" href="css/navigation.css">
     <meta name="theme-color" content="#5371ff">
     <meta name="description" content="导航中心提供一站式资源平台，帮助用户快速访问常用网站。">
-    <meta property="og:title" content="导航中心 | 一站式资源平台">
-    <meta property="og:description" content="导航中心提供一站式资源平台，帮助用户快速访问常用网站。">
-    <meta property="og:image" content="/path/to/image.jpg">
-    <meta property="og:url" content="http://example.com/navigation.php">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="导航中心 | 一站式资源平台">
-    <meta name="twitter:description" content="导航中心提供一站式资源平台，帮助用户快速访问常用网站。">
-    <meta name="twitter:image" content="/path/to/image.jpg">
 </head>
 <body>
     <div class="app-container">
