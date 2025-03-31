@@ -47,6 +47,7 @@ $encryptedData = $encryption->encrypt(json_encode($encryptedNavLinks));
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <?php include 'analytics.php'; ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>导航中心 | 一站式资源平台</title>

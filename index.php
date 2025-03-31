@@ -14,6 +14,7 @@ if (empty($_SESSION['csrf_token'])) {
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <?php include 'analytics.php'; ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>登录验证 - 888导航 | 精选优质网络资源导航平台</title>
@@ -86,34 +87,6 @@ if (empty($_SESSION['csrf_token'])) {
       }
     }
     </script>
-
-    <style>
-    .captcha-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-bottom: 15px;
-    }
-
-    .refresh-btn {
-        background-color: rgba(78, 172, 237, 0.2);
-        border: none;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: #4EACED;
-        transition: background-color 0.2s;
-    }
-
-    .refresh-btn:hover {
-        background-color: rgba(78, 172, 237, 0.3);
-    }
-    </style>
 
 </body>
 </html>

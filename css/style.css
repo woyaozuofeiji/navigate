@@ -75,12 +75,11 @@ h1 {
 }
 
 .captcha-container {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 25px;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
 }
 
 .captcha-image {
@@ -173,18 +172,21 @@ h1 {
 }
 
 .refresh-btn {
-    background: none;
+    background-color: rgba(78, 172, 237, 0.2);
     border: none;
-    color: var(--primary-color);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    font-size: 0.9rem;
-    text-decoration: underline;
-    margin-top: 10px;
-    transition: all 0.3s ease;
+    color: #4EACED;
+    transition: background-color 0.2s;
 }
 
 .refresh-btn:hover {
-    color: var(--gradient-end);
+    background-color: rgba(78, 172, 237, 0.3);
 }
 
 .message {
