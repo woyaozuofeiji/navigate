@@ -1,6 +1,31 @@
+// 适用于中文的Base64解码函数
+function base64DecodeUnicode(str) {
+    try {
+        // 先进行标准的Base64解码
+        const binary = atob(str);
+        // 转换为Uint8Array以处理二进制数据
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        // 使用TextDecoder解码为Unicode字符串
+        return new TextDecoder('utf-8').decode(bytes);
+    } catch (e) {
+        console.error('Base64解码错误:', e);
+        return str; // 解码失败时返回原始字符串
+    }
+}
+
+// 安全反转Unicode字符串
+function reverseUnicodeString(str) {
+    // 将字符串拆分为字符数组(考虑Unicode字符)
+    return [...str].reverse().join('');
+}
+
 // 解密数据函数
 async function decryptData(encryptedData) {
     try {
+        // 发送请求到服务器进行解密
         const response = await fetch('decrypt.php', {
             method: 'POST',
             headers: {
@@ -14,26 +39,63 @@ async function decryptData(encryptedData) {
         }
         
         const result = await response.json();
-        console.log('解密结果:', result); // 添加调试日志
         
-        if (!result.success) {
-            throw new Error(result.message || '解密失败');
+        if (!result.success || result.data === undefined) {
+            throw new Error('服务器返回的数据无效');
         }
         
-        // 确保返回的数据是数组
+        // 处理返回的变换后的数据
+        let processedData = result.data;
+        let dataFormat = result.fmt || '';
+        
+        // 对服务器返回的变换数据进行反向处理
+        let decodedData = '';
+        if (typeof processedData === 'string' && processedData.startsWith('REV:')) {
+            // 去除前缀
+            const encodedData = processedData.substring(4);
+            // 使用优化的Base64解码函数
+            const decodedReversed = base64DecodeUnicode(encodedData);
+            // 再次反转还原原始字符串 - 使用正确的Unicode反转
+            decodedData = reverseUnicodeString(decodedReversed);
+        } else {
+            // 兼容处理，如果不是预期格式，直接使用
+            decodedData = processedData;
+        }
+        
+        // 处理数据
         let data;
         try {
-            data = JSON.parse(result.data);
+            // 尝试作为JSON解析
+            data = JSON.parse(decodedData);
+            console.log('解析为JSON成功:', typeof data);
         } catch (parseError) {
-            console.error('JSON解析错误:', parseError);
-            throw new Error('解密数据格式错误: 无法解析JSON');
+            // 如果解析失败，直接返回解密结果
+            console.warn('JSON解析错误，尝试直接按字符串处理:', parseError);
+            // 将解密结果按行拆分，作为导航数据分类
+            const lines = decodedData.split('\n').filter(line => line.trim());
+            if (lines.length > 0) {
+                console.log(`按行拆分得到 ${lines.length} 行数据`);
+                data = lines.map(line => {
+                    const parts = line.split('|');
+                    return {
+                        name: parts[0] || '',
+                        links: (parts[1] || '').split(',').map(url => ({ name: url, url: url }))
+                    };
+                });
+            } else {
+                throw new Error('无法解析解密后的数据');
+            }
         }
         
-        if (!Array.isArray(data)) {
-            throw new Error('解密数据格式错误: 不是数组');
+        if (Array.isArray(data)) {
+            return data;
+        } else if (typeof data === 'object') {
+            // 处理可能的单一对象情况
+            return [data];
+        } else {
+            console.error('解析后的数据格式不正确:', typeof data);
+            throw new Error('解密数据格式错误: 不是数组或对象');
         }
-        
-        return data;
     } catch (error) {
         console.error('解密错误:', error);
         throw error;
@@ -50,14 +112,15 @@ async function decryptMultipleValues(encryptedValues) {
     try {
         console.log(`批量解密: 正在处理 ${encryptedValues.length} 个项目`);
         
+        // 发送批量解密请求到服务器
         const response = await fetch('decrypt.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 batch: true,
-                data: encryptedValues 
+                data: encryptedValues
             })
         });
         
@@ -66,19 +129,35 @@ async function decryptMultipleValues(encryptedValues) {
         }
         
         const result = await response.json();
-        if (!result.success) {
-            throw new Error(result.message || '批量解密失败');
+        
+        if (!result.success || !Array.isArray(result.data)) {
+            throw new Error('服务器返回的批量解密数据无效');
         }
         
-        if (!Array.isArray(result.data) || result.data.length !== encryptedValues.length) {
-            console.warn(`批量解密: 返回的数据长度(${result.data?.length || 0})与请求的长度(${encryptedValues.length})不匹配`);
-        }
+        // 处理服务器返回的变换后的数据
+        const dataFormat = result.fmt || '';
+        const decodedResults = result.data.map(item => {
+            if (typeof item === 'string' && item.startsWith('REV:')) {
+                try {
+                    // 去除前缀
+                    const encodedData = item.substring(4);
+                    // 使用优化的Base64解码函数
+                    const decodedReversed = base64DecodeUnicode(encodedData);
+                    // 再次反转还原原始字符串 - 使用正确的Unicode反转
+                    return reverseUnicodeString(decodedReversed);
+                } catch (e) {
+                    console.error('解码错误:', e);
+                    return '';
+                }
+            }
+            return item; // 如果不是预期格式，直接返回
+        });
         
-        return result.data || [];
+        return decodedResults || [];
     } catch (error) {
         console.error('批量解密错误:', error);
-        // 返回空数组而不是抛出错误，允许页面继续加载
-        return encryptedValues.map(() => '');
+        // 返回一些默认值，允许页面继续加载
+        return encryptedValues.map((_, index) => `解密失败项${index+1}`);
     }
 }
 
@@ -101,6 +180,7 @@ async function decryptValue(encryptedValue) {
     }
     
     try {
+        // 发送解密请求到服务器
         const response = await fetch('decrypt.php', {
             method: 'POST',
             headers: {
@@ -114,14 +194,33 @@ async function decryptValue(encryptedValue) {
         }
         
         const result = await response.json();
-        if (!result.success) {
-            throw new Error(result.message || '解密失败');
+        
+        if (!result.success || result.data === undefined) {
+            throw new Error('服务器返回的数据无效');
+        }
+        
+        // 处理服务器返回的变换后的数据
+        let decodedData = result.data;
+        const dataFormat = result.fmt || '';
+        
+        if (typeof decodedData === 'string' && decodedData.startsWith('REV:')) {
+            try {
+                // 去除前缀
+                const encodedData = decodedData.substring(4);
+                // 使用优化的Base64解码函数
+                const decodedReversed = base64DecodeUnicode(encodedData);
+                // 再次反转还原原始字符串 - 使用正确的Unicode反转
+                decodedData = reverseUnicodeString(decodedReversed);
+            } catch (e) {
+                console.error('解码错误:', e);
+                decodedData = ''; // 解码失败返回空字符串
+            }
         }
         
         // 缓存结果
-        window.decryptionCache.set(encryptedValue, result.data);
+        window.decryptionCache.set(encryptedValue, decodedData);
         
-        return result.data;
+        return decodedData;
     } catch (error) {
         console.error(`解密错误 [${encryptedValue.substring(0, 10)}...]: ${error.message}`);
         // 缓存错误结果以避免重复请求
@@ -558,12 +657,146 @@ function addCustomCSS() {
     document.head.appendChild(styleEl);
 }
 
+// 创建碎片化安全文本显示
+function createSecureText(text) {
+    // 创建包装容器
+    const wrapper = document.createElement('div');
+    wrapper.className = 'secure-text-wrapper';
+    
+    // 生成唯一ID，这会在运行时变化，增加逆向难度
+    const uid = 'text-' + Math.random().toString(36).substring(2, 10);
+    wrapper.id = uid;
+    
+    // 不在DOM中存储任何明文，仅存储一个引用标识符
+    wrapper.setAttribute('data-ref', uid);
+    
+    // 创建显示占位符（做伪装用，完全不含明文）
+    const placeholderLength = text.length;
+    const placeholderChar = '•'; // 使用中点字符作为占位符
+    
+    const placeholderEl = document.createElement('span');
+    placeholderEl.className = 'placeholder-text';
+    placeholderEl.textContent = Array(placeholderLength + 1).join(placeholderChar);
+    placeholderEl.style.visibility = 'hidden'; // 隐藏占位符文本
+    wrapper.appendChild(placeholderEl);
+    
+    // 在全局（非DOM）存储中保存文本
+    // 使用闭包防止直接访问
+    (function(id, content) {
+        // 如果全局存储不存在则创建
+        if (!window._secureTextStore) {
+            window._secureTextStore = new Map();
+            
+            // 添加渲染器，使用requestAnimationFrame进行异步渲染
+            // 这样即使检查DOM时，也只能看到渲染前或渲染后的状态
+            window._renderSecureText = function() {
+                if (!window._secureTextStore) return;
+                
+                window._secureTextStore.forEach((content, id) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    
+                    // 获取当前渲染状态
+                    const renderedAttr = el.getAttribute('data-rendered');
+                    if (renderedAttr === 'true') return; // 已渲染过
+                    
+                    // 创建canvas元素用于渲染文本
+                    // Canvas内容不会出现在DOM中，只在视觉上呈现
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'text-canvas';
+                    const ctx = canvas.getContext('2d');
+                    
+                    // 使用与页面样式一致的字体
+                    const computedStyle = window.getComputedStyle(el);
+                    const fontStyle = computedStyle.fontStyle || 'normal';
+                    const fontVariant = computedStyle.fontVariant || 'normal';
+                    const fontWeight = computedStyle.fontWeight || 'normal';
+                    const fontSize = computedStyle.fontSize || '16px';
+                    const fontFamily = computedStyle.fontFamily || 'sans-serif';
+                    
+                    ctx.font = `${fontStyle} ${fontVariant} ${fontWeight} ${fontSize} ${fontFamily}`;
+                    
+                    // 测量文本宽度
+                    const textMetrics = ctx.measureText(content);
+                    const textWidth = Math.ceil(textMetrics.width);
+                    const textHeight = parseInt(fontSize, 10) * 1.2; // 估算高度
+                    
+                    // 设置canvas尺寸
+                    canvas.width = textWidth;
+                    canvas.height = textHeight;
+                    
+                    // 重新设置字体（因为调整canvas尺寸会重置上下文）
+                    ctx.font = `${fontStyle} ${fontVariant} ${fontWeight} ${fontSize} ${fontFamily}`;
+                    
+                    // 设置文本颜色
+                    ctx.fillStyle = computedStyle.color || '#000000';
+                    
+                    // 在canvas上绘制文本
+                    ctx.fillText(content, 0, textHeight - 5);
+                    
+                    // 清除之前的内容
+                    while (el.firstChild) {
+                        el.removeChild(el.firstChild);
+                    }
+                    
+                    // 添加canvas到DOM
+                    el.appendChild(canvas);
+                    
+                    // 标记为已渲染
+                    el.setAttribute('data-rendered', 'true');
+                });
+            };
+            
+            // 启动渲染循环
+            const renderLoop = () => {
+                window._renderSecureText();
+                requestAnimationFrame(renderLoop);
+            };
+            requestAnimationFrame(renderLoop);
+            
+            // 添加事件监听以在DOM变化时重新渲染
+            const observer = new MutationObserver(() => {
+                window._renderSecureText();
+            });
+            observer.observe(document.body, { 
+                childList: true, 
+                subtree: true 
+            });
+        }
+        
+        // 存储文本的引用
+        window._secureTextStore.set(id, content);
+    })(uid, text);
+    
+    return wrapper;
+}
+
 // 简化版创建导航链接函数
 async function createNavLinksSimple(encryptedData) {
-    console.log('创建导航链接简化版，数据长度:', encryptedData.length);
+    console.log('创建导航链接简化版，数据长度:', encryptedData?.length);
     
     if (!Array.isArray(encryptedData)) {
+        console.error('导航数据不是数组:', encryptedData);
         throw new Error('导航数据格式错误');
+    }
+    
+    // 验证数据结构
+    if (encryptedData.length === 0) {
+        console.error('导航数据为空数组');
+        throw new Error('导航数据为空');
+    }
+    
+    const firstItem = encryptedData[0];
+    console.log('第一项数据样本:', firstItem);
+    
+    if (!firstItem || typeof firstItem !== 'object') {
+        console.error('第一项数据不是对象:', firstItem);
+        throw new Error('导航数据格式错误: 项目不是对象');
+    }
+    
+    if (!('name' in firstItem) || !('links' in firstItem)) {
+        console.error('第一项数据缺少必要字段:', firstItem);
+        throw new Error('导航数据格式错误: 缺少必要字段');
     }
     
     const navContainer = document.getElementById('navContainer');
@@ -599,22 +832,17 @@ async function createNavLinksSimple(encryptedData) {
     // 固定分类设置
     const fixedCategories = {
         // 将"学习资源"固定在第一位（如果存在）
-        // "学习资源": 0,
-        // "特色好站": 1,
-        // 可以添加更多固定分类，例如: "其他分类名": 1 表示固定在第二位
+        "学习资源": 0,
+        // 可以添加更多固定分类
     };
     
-    // 固定链接设置 - 新增配置对象
+    // 固定链接设置
     const fixedLinks = {
         // 格式: "分类名": { "链接名": 位置索引 }
-        // "学习资源": {
-        //     "Coursera": 0,  // 将Coursera固定在学习资源分类的第一位
-        //     "edX": 2        // 将edX固定在学习资源分类的第二位
-        // },
-        // "特色好站": {
-        //     "心灵社区": 0,  // 将Coursera固定在学习资源分类的第一位
-        //     "女主天地": 2        // 将edX固定在学习资源分类的第二位
-        // }
+        "学习资源": {
+            "Coursera": 0,  // 将Coursera固定在学习资源分类的第一位
+            "edX": 1        // 将edX固定在学习资源分类的第二位
+        }
         // 可以添加更多分类和固定链接
     };
     
@@ -680,28 +908,15 @@ async function createNavLinksSimple(encryptedData) {
         window.decryptionCache.set(encryptedValue, decryptedValues[index] || '');
     });
     
-    // 使用内存中的诗句 - 对于性能考虑，预先生成随机的诗句
-    const poems = [
-        "举头望明月", "银烛秋光冷", "愿君多采撷", "红豆生南国", "空斋自照临",
-        "妾发初覆额", "郎骑竹马来", "我本楚狂人", "岱宗夫如何", "只在此山中",
-        "好雨知时节", "造化钟神秀", "白日依山尽", "欲穷千里目", "松下问童子",
-        "明月松间照", "国破山河在", "感时花溅泪", "床前明月光", "空山新雨后"
-    ];
-    
     // 清空容器
     navContainer.innerHTML = '';
     
     // 创建文档片段以减少DOM操作
     const fragment = document.createDocumentFragment();
     
-    // 创建一个新的样式元素，用于存储真实文本
-    const styleElement = document.createElement('style');
-    styleElement.id = 'real-text-styles';
+    // 创建禁用开发者工具检测
+    // addDevToolsProtection(); // 暂时关闭开发者工具检测功能
     
-    // 存储所有的CSS规则
-    const cssRules = [];
-    
-    let poemIndex = 0;
     const totalCategories = encryptedData.length;
     let totalLinks = 0;
     
@@ -741,39 +956,12 @@ async function createNavLinksSimple(encryptedData) {
         const titleElement = document.createElement('h2');
         titleElement.className = 'category-title';
         
-        // 在DOM中使用古诗，但通过CSS ::before伪元素显示真实文本
-        const poemText = poems[poemIndex++ % poems.length];
-        const titleTextSpan = document.createElement('span');
-        titleTextSpan.textContent = poemText;
+        // 使用碎片化方法显示分类名称
+        const titleTextWrapper = createSecureText(decryptedName);
+        titleElement.appendChild(titleTextWrapper);
         
-        // 给元素添加唯一ID
-        const titleId = 'navTitle-' + Math.random().toString(36).substring(2, 10);
-        titleTextSpan.id = titleId;
-        
-        // 添加CSS规则实现在页面上显示真实文本
-        cssRules.push(`
-            #${titleId} {
-                color: transparent;
-                position: relative;
-            }
-            #${titleId}::before {
-                content: "${decryptedName.replace(/"/g, '\\"')}";
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                color: var(--text-color);
-                display: flex;
-                align-items: center;
-                opacity: 1 !important; /* 确保始终可见 */
-                visibility: visible !important; /* 确保始终可见 */
-            }
-        `);
-        
-        titleElement.appendChild(titleTextSpan);
         categoryHeader.appendChild(titleElement);
-        categoryHeader.appendChild(expandIndicator); // 添加展开/折叠指示器
+        categoryHeader.appendChild(expandIndicator);
         categorySection.appendChild(categoryHeader);
         
         // 创建链接网格
@@ -861,41 +1049,11 @@ async function createNavLinksSimple(encryptedData) {
             // 存储加密URL
             linkElement.setAttribute('data-encrypted-url', link.url);
             
-            // 添加链接文本
-            const linkText = document.createElement('span');
-            linkText.className = 'link-text';
+            // 使用碎片化方法显示链接名称
+            const linkTextWrapper = createSecureText(decryptedLinkName);
+            linkTextWrapper.className = 'link-text';
             
-            // 在DOM中使用古诗
-            const linkPoemText = poems[poemIndex++ % poems.length];
-            linkText.textContent = linkPoemText;
-            
-            // 给元素添加唯一ID
-            const linkId = 'navLink-' + Math.random().toString(36).substring(2, 10);
-            linkText.id = linkId;
-            
-            // 添加CSS规则实现在页面上显示真实文本
-            cssRules.push(`
-                #${linkId} {
-                    color: transparent;
-                    position: relative;
-                }
-                #${linkId}::before {
-                    content: "${decryptedLinkName.replace(/"/g, '\\"')}";
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                    height: 100%;
-                    color: var(--text-color);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    opacity: 1 !important; /* 确保始终可见 */
-                    visibility: visible !important; /* 确保始终可见 */
-                }
-            `);
-            
-            linkElement.appendChild(linkText);
+            linkElement.appendChild(linkTextWrapper);
             
             // 添加点击事件 - 使用事件委托来减少事件监听器数量
             linkElement.setAttribute('data-link-action', 'open');
@@ -941,11 +1099,78 @@ async function createNavLinksSimple(encryptedData) {
     // 一次性添加所有内容到DOM
     navContainer.appendChild(fragment);
     
-    // 添加所有CSS规则到样式表
-    styleElement.textContent = cssRules.join('\n');
-    document.head.appendChild(styleElement);
+    // 添加碎片化保护的样式
+    addFragmentationStyles();
     
     console.log(`UI创建完成。共 ${totalCategories} 个分类，${totalLinks} 个链接。`);
+}
+
+// 添加与碎片化文本相关的样式
+function addFragmentationStyles() {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'fragmentation-styles';
+    styleEl.textContent = `
+        .secure-text-wrapper {
+            display: inline-block;
+            position: relative;
+            line-height: normal;
+        }
+        
+        .text-canvas {
+            display: block;
+        }
+        
+        /* 禁用选择以防复制 */
+        .secure-text-wrapper, .text-canvas, .link-item, .category-title {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+    `;
+    
+    document.head.appendChild(styleEl);
+}
+
+// 添加开发者工具检测
+function addDevToolsProtection() {
+    // 添加开发者工具检测
+    const detectScript = document.createElement('script');
+    detectScript.textContent = `
+        // 检测开发者工具
+        function detectDevTools() {
+            const threshold = 160;
+            const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+            const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+            
+            if (widthThreshold || heightThreshold) {
+                // 清除所有敏感数据
+                document.body.innerHTML = '<div style="text-align:center;padding:50px;"><h2>出于安全原因，请关闭开发者工具后刷新页面</h2></div>';
+            }
+        }
+        
+        // 添加事件监听和定时检测
+        window.addEventListener('resize', detectDevTools);
+        setInterval(detectDevTools, 1000);
+        
+        // 禁用控制台
+        Object.defineProperty(window, 'console', {
+            value: Object.freeze({
+                log: function(){},
+                debug: function(){},
+                info: function(){},
+                warn: function(){},
+                error: function(){},
+                dir: function(){},
+                time: function(){},
+                timeEnd: function(){},
+                clear: function(){},
+                trace: function(){}
+            })
+        });
+    `;
+    
+    document.head.appendChild(detectScript);
 }
 
 // 添加基本样式

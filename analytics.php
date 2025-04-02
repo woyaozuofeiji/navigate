@@ -7,3 +7,6 @@
 
   gtag('config', 'G-TY92Y54C1Y');
 </script>
+
+<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
+<script>LA.init({id:"K0lPXXc86JPqbnyn",ck:"K0lPXXc86JPqbnyn"})</script>

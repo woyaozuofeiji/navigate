@@ -139,6 +139,7 @@ $encryptedData = $encryption->encrypt(json_encode($encryptedNavLinks));
     <!-- 存储加密数据 -->
     <div id="encryptedData" style="display: none;"><?php echo htmlspecialchars($encryptedData); ?></div>
 
+    <!-- 现有脚本 -->
     <script src="js/navigation.js"></script>
 </body>
 </html>
