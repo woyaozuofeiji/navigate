@@ -17,22 +17,20 @@ if (empty($_SESSION['csrf_token'])) {
     <?php include 'analytics.php'; ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录验证 - 888导航 | 精选优质网络资源导航平台</title>
+    <title>登录验证 - 无极导航 | 精选优质网络资源导航平台</title>
     
     <!-- SEO 元标签 -->
-    <meta name="description" content="888导航是一个精选优质网络资源的专业导航平台，为用户提供便捷的网站分类导航服务。通过简单验证即可访问全部内容。">
-    <meta name="keywords" content="888导航,网站导航,资源导航,网址大全,上网导航,优质网站,888dh.cc">
-    <meta name="author" content="888导航">
+    <meta name="description" content="无极导航是一个精选优质网络资源的专业导航平台，为用户提供便捷的网站分类导航服务。通过简单验证即可访问全部内容。">
+    <meta name="keywords" content="无极导航,网站导航,资源导航,网址大全,上网导航,优质网站,888dh.cc">
+    <meta name="author" content="无极导航">
     
     <!-- Open Graph 标签 (用于社交媒体分享) -->
-    <meta property="og:title" content="888导航 - 精选优质网络资源的专业导航平台">
-    <meta property="og:description" content="888导航为用户提供便捷的优质网络资源导航服务，一站直达您需要的各类网站。">
+    <meta property="og:title" content="无极导航 - 精选优质网络资源的专业导航平台">
+    <meta property="og:description" content="无极导航为用户提供便捷的优质网络资源导航服务，一站直达您需要的各类网站。">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://888dh.cc/">
-    <meta property="og:site_name" content="888导航">
+    <meta property="og:site_name" content="无极导航">
     
     <!-- 其他有用的SEO标签 -->
-    <link rel="canonical" href="https://888dh.cc/">
     <meta name="robots" content="index, follow">
     <meta name="revisit-after" content="7 days">
     
@@ -45,7 +43,7 @@ if (empty($_SESSION['csrf_token'])) {
 </head>
 <body>
     <div class="container">
-        <h1>888导航</h1>
+        <h1>无极导航</h1>
         <form id="verifyForm" method="post" action="verify.php">
             <div class="captcha-container">
                 <img id="captchaImage" src="captcha.php" alt="验证码">
@@ -72,21 +70,6 @@ if (empty($_SESSION['csrf_token'])) {
     </div>
 
     <script src="js/main.js"></script>
-
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "888导航",
-      "url": "https://888dh.cc/",
-      "description": "精选优质网络资源的专业导航平台",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://888dh.cc/search?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
-    }
-    </script>
 
 </body>
 </html>
